@@ -1,0 +1,80 @@
+[Info] [2025-2-18 11:46:33] /***************************Start Configuration***************************/
+[Info] [2025-2-18 11:46:33] Path: D:/pds2022_sp6_4/PDS_2022.2-SP6.4/bin
+[Info] [2025-2-18 11:46:33] Version: 146967
+[Info] [2025-2-18 11:46:34] Current Path: D:/2L676demo/led_test/led_test
+[Info] [2025-2-18 11:46:34] PDS Dir Path: D:/2L676demo/led_test/led_test
+[Info] [2025-2-18 11:46:35] Configuration is not connect with server. connect first then scan chain.
+[Debug] [2025-2-18 11:46:35] Client Local host name:DESKTOP-50P54KS
+[Debug] [2025-2-18 11:46:35] Client Local Address:192.168.3.194
+[Debug] [2025-2-18 11:46:35] Client Local Address:192.168.0.3
+[Debug] [2025-2-18 11:46:35] Server Address:127.0.0.1, Port:65420
+[Debug] [2025-2-18 11:46:35] Log::Print : Connecting to server[127.0.0.1 : 65420].
+[Info] [2025-2-18 11:46:35] Connect OK, Server: 127.0.0.1  Port: 65420
+[Debug] [2025-2-18 11:46:35] Finish.
+[Info] [2025-2-18 11:46:35] Connect server succeeded
+[Debug] [2025-2-18 11:46:35] Send RPC:1
+[Debug] [2025-2-18 11:46:35] Send cmd [check version information:40004] OK
+[Debug] [2025-2-18 11:46:35] Send RPC:2
+[Debug] [2025-2-18 11:46:35] Send cmd [get_cable_paras:40010] OK
+[Debug] [2025-2-18 11:46:35] Begin to send initialize chain cmd...
+[Debug] [2025-2-18 11:46:35] Send RPC:3
+[Debug] [2025-2-18 11:46:35] Send cmd [Open config cable:20001] OK
+[Debug] [2025-2-18 11:46:35] End to send initialize chain cmd.
+[Debug] [2025-2-18 11:46:35] COMMAND[check version information] execute successfully, takes 0.0 secs.
+[Debug] [2025-2-18 11:46:35] Log::Print : Connect to server[127.0.0.1 : 65420] successfully.
+[Debug] [2025-2-18 11:46:35] Log::Print : COMMAND[check version information] execute successfully, takes 0.0 secs.
+[Debug] [2025-2-18 11:46:36] COMMAND[get_cable_paras] execute successfully, takes 1.2 secs.
+[Debug] [2025-2-18 11:46:36] Log::Print : The cable List : 
+Cable index 0:USB Cable II/fffffffffffffffe 
+
+[Debug] [2025-2-18 11:46:36] Log::Print : COMMAND[get_cable_paras] execute successfully, takes 1.2 secs.
+[Debug] [2025-2-18 11:46:37] begin the exec of open cable cmd...
+[Debug] [2025-2-18 11:46:37] Begin to deal with chain from server...
+[Debug] [2025-2-18 11:46:37] Begin to set user chain...
+[Debug] [2025-2-18 11:46:37] End to set user chain.
+[Debug] [2025-2-18 11:46:37] Begin to update graphic item and tree item ...
+[Debug] [2025-2-18 11:46:37] End to update graphic item and tree item ...
+[Debug] [2025-2-18 11:46:37] Log::Print : PANGO USB CABLE II cable driver: D2XX DLL
+[Debug] [2025-2-18 11:46:37] Log::Print : PG2L100H
+[Debug] [2025-2-18 11:46:37] Log::Print : This device configure situation (done bit): 0
+[Info] [2025-2-18 11:46:46] set OpenLastPath: D:/2L676demo/led_test/led_test/generate_bitstream/led_test.sbit
+[Debug] [2025-2-18 11:46:46] begin to get device info from CFG file...
+[Debug] [2025-2-18 11:46:46] end to get device info from CFG file...
+[Debug] [2025-2-18 11:46:46] Begin to update graphic item and tree item ...
+[Debug] [2025-2-18 11:46:46] End to update graphic item and tree item ...
+[Debug] [2025-2-18 11:46:46] Begin to update graphic item and tree item ...
+[Debug] [2025-2-18 11:46:46] End to update graphic item and tree item ...
+[Debug] [2025-2-18 11:46:46] End to deal wiht chain from server.
+[Debug] [2025-2-18 11:46:46] end the exec of open cable cmd.
+[Debug] [2025-2-18 11:46:46] COMMAND[Open config cable] execute successfully, takes 10.7 secs.
+[Debug] [2025-2-18 11:46:46] Log::Print : COMMAND[Open config cable] execute successfully, takes 10.7 secs.
+[Debug] [2025-2-18 11:46:47] Begin to send programming cmd...
+[Debug] [2025-2-18 11:46:47] Send RPC:4
+[Debug] [2025-2-18 11:46:47] Begin to send program data.
+[Debug] [2025-2-18 11:46:47] End to send program data.
+[Debug] [2025-2-18 11:46:47] Send cmd [Program:20002] OK
+[Debug] [2025-2-18 11:46:48] The value of Progress is 6
+[Debug] [2025-2-18 11:46:48] The value of Progress is 10
+[Debug] [2025-2-18 11:46:48] The value of Progress is 15
+[Debug] [2025-2-18 11:46:48] The value of Progress is 20
+[Debug] [2025-2-18 11:46:49] The value of Progress is 25
+[Debug] [2025-2-18 11:46:49] The value of Progress is 30
+[Debug] [2025-2-18 11:46:49] The value of Progress is 35
+[Debug] [2025-2-18 11:46:49] The value of Progress is 40
+[Debug] [2025-2-18 11:46:49] The value of Progress is 45
+[Debug] [2025-2-18 11:46:49] The value of Progress is 50
+[Debug] [2025-2-18 11:46:49] The value of Progress is 55
+[Debug] [2025-2-18 11:46:50] The value of Progress is 60
+[Debug] [2025-2-18 11:46:50] The value of Progress is 65
+[Debug] [2025-2-18 11:46:50] The value of Progress is 70
+[Debug] [2025-2-18 11:46:50] The value of Progress is 75
+[Debug] [2025-2-18 11:46:50] The value of Progress is 80
+[Debug] [2025-2-18 11:46:50] The value of Progress is 85
+[Debug] [2025-2-18 11:46:51] The value of Progress is 90
+[Debug] [2025-2-18 11:46:51] The value of Progress is 95
+[Debug] [2025-2-18 11:46:51] The value of Progress is 100
+[Debug] [2025-2-18 11:46:51] COMMAND[Program] execute successfully, takes 3.8 secs.
+[Debug] [2025-2-18 11:46:51] End to send programming cmd.
+[Debug] [2025-2-18 11:46:51] Log::Print : The done bit is 1
+[Debug] [2025-2-18 11:46:51] Log::Print : COMMAND[Program] execute successfully, takes 3.8 secs.
+[Info] [2025-2-18 11:59:33] /***************************End Configration***************************/

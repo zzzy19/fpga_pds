@@ -1,0 +1,1 @@
+.rtl_screen -top_module {led_test} -include_path {<D:/2L676demo/led_test/led_test>} -design_files {<D:/2L676demo/led_test/led_test/source/led_test.v|work>}
