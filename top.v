@@ -1,7 +1,7 @@
 // =============================================================================
 // == 文件名: top.v (最终修正版)
 // == 功能:   FFT频谱分析仪
-// == 版本:   3.3.0 (集成了对数高度缩放功能)
+// == 版本:   3.4.0 (集成dB近似高度缩放功能)
 // =============================================================================
 `timescale 1ns / 1ps
 
@@ -114,25 +114,19 @@ fft_power_calc u_fft_power_calc (
     .clk(clk_24M), .rst_n(rst_24M_n), .real_in(fft_real_part), .imag_in(fft_imag_part), .power_out(power_val)
 );
 
-// <<< MODIFICATION 1: 删除旧的高度转换逻辑 >>>
-// 原来的这行代码已被删除: wire [7:0] screen_height_val = power_val[48:41];
-
-// <<< MODIFICATION 2: 声明一个新 wire 用于接收对数缩放后的高度值 >>>
-wire [7:0] log_scaled_height;
-
-// <<< MODIFICATION 3: 实例化我们新的对数缩放模块 >>>
-log2_approx height_scaler (
-    .data_in(power_val),          // 输入是原始的、巨大的功率值
-    .log_out(log_scaled_height)   // 输出是压缩后的8位高度值
+// 使用新的dB缩放模块
+wire [7:0] db_scaled_height;
+power_to_db_approx db_height_scaler_inst (
+    .power_in(power_val),          
+    .height_out(db_scaled_height)
 );
-
 
 wire [9:0] ram_wr_addr, ram_rd_addr;
 wire       ram_wr_en;
 wire [7:0] ram_rd_data;
 dual_port_ram_1024x8 display_ram (
     .a_addr(ram_wr_addr), 
-    .a_wr_data(log_scaled_height), // <<< MODIFICATION 4: 将RAM的写数据源改为对数缩放后的值 >>>
+    .a_wr_data(db_scaled_height), // 将RAM的写数据源改为dB缩放后的值
     .a_wr_en(ram_wr_en), 
     .a_clk(clk_24M), 
     .a_rst(!rst_24M_n), 
