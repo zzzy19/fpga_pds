@@ -1,27 +1,25 @@
 // =============================================================================
-// == ÎÄ¼şÃû: top.v (×îÖÕĞŞÕı°æ)
-// == ¹¦ÄÜ:   FFTÆµÆ×·ÖÎöÒÇ
-// == °æ±¾:   3.4.0 (¼¯³ÉdB½üËÆ¸ß¶ÈËõ·Å¹¦ÄÜ)
+// == æ–‡ä»¶å: top.v (æœ€ç»ˆç‰ˆ - ç§»é™¤èƒŒæ™¯ç½‘æ ¼)
+// == åŠŸèƒ½:   FFTé¢‘è°±åˆ†æä»ª
+// == ç‰ˆæœ¬:   4.0.0
 // =============================================================================
 `timescale 1ns / 1ps
-
 module top(
-    input  wire        clk_27M,
-    input  wire        rst_n,
-    input  wire [7:0]  ad_data_in,
-    output wire        ad_clk,
-    output wire        iic_tx_scl,
-    inout  wire        iic_tx_sda,
-    output wire        led_int,
-    output wire        vout_hs,
-    output wire        vout_vs,
-    output wire        vout_de,
-    output wire        vout_clk,
-    output wire [23:0] vout_data
+input  wire        clk_27M,
+input  wire        rst_n,
+input  wire [7:0]  ad_data_in,
+output wire        ad_clk,
+output wire        iic_tx_scl,
+inout  wire        iic_tx_sda,
+output wire        led_int,
+output wire        vout_hs,
+output wire        vout_vs,
+output wire        vout_de,
+output wire        vout_clk,
+output wire [23:0] vout_data
 );
-
 //================================================================
-// A. ²ÎÊı¶¨Òå
+// A. å‚æ•°å®šä¹‰
 //================================================================
 localparam FFT_POINTS         = 1024;
 localparam FFT_INPUT_WIDTH    = 16;
@@ -32,47 +30,39 @@ localparam S_FEED_FFT         = 4'd2;
 localparam S_STORE_FFT_RESULT = 4'd3;
 localparam S_CALC_POWER       = 4'd4;
 localparam S_WAIT_FRAME       = 4'd5;
-
 //================================================================
-// B. Ê±ÖÓÓë¸´Î»Éú³É
+// B. æ—¶é’Ÿä¸å¤ä½ç”Ÿæˆ
 //================================================================
 wire clk_24M, clk_5M, pix_clk, hdmi_cfg_clk;
 wire pll_hdmi_locked, pll_system_locked, pll_locked;
-
 pll_hdmi u_pll_hdmi ( .clkin1(clk_27M), .clkout0(pix_clk), .clkout1(hdmi_cfg_clk), .lock(pll_hdmi_locked) );
 pll_system u_pll_system ( .clkin1(clk_27M), .clkout0(clk_24M), .clkout1(clk_5M), .lock(pll_system_locked) );
-
 assign pll_locked = pll_hdmi_locked & pll_system_locked;
 wire global_reset_n = rst_n & pll_locked;
 wire rst_24M_n, rst_5M_n;
-
 cdc_sync reset_sync_24M_inst ( .i_dest_clk(clk_24M), .i_dest_rst_n(1'b1), .i_async_in(global_reset_n), .o_sync_out(rst_24M_n) );
 cdc_sync reset_sync_5M_inst ( .i_dest_clk(clk_5M), .i_dest_rst_n(1'b1), .i_async_in(global_reset_n), .o_sync_out(rst_5M_n) );
-
 localparam PWAIT = 24_000;
 reg [15:0] pwcnt;
 reg        pwok;
-
 always @(posedge clk_24M) begin
-    if (!rst_24M_n) begin
-        pwcnt <= 0;
-        pwok <= 1'b0;
-    end
-    else if (!pwok) begin
-        if (pwcnt == PWAIT - 1) begin
-            pwok <= 1'b1;
-        end
-        else begin
-            pwcnt <= pwcnt + 1'b1;
-        end
-    end
+if (!rst_24M_n) begin
+pwcnt <= 0;
+pwok <= 1'b0;
 end
-
+else if (!pwok) begin
+if (pwcnt == PWAIT - 1) begin
+pwok <= 1'b1;
+end
+else begin
+pwcnt <= pwcnt + 1'b1;
+end
+end
+end
 assign ad_clk   = clk_5M;
 assign vout_clk = pix_clk;
-
 //================================================================
-// C & D ²¿·Ö: IPºËÊµÀı»¯ÓëĞÅºÅÁ¬½Ó
+// C & D éƒ¨åˆ†: IPæ ¸å®ä¾‹åŒ–ä¸ä¿¡å·è¿æ¥
 //================================================================
 wire [7:0] fifo_rd_data;
 wire       fifo_rd_empty, fifo_almost_full, fifo_wr_full, fifo_rd_en;
@@ -84,158 +74,150 @@ reg [$clog2(FFT_POINTS)-1:0] fft_input_cnt;
 wire       m_axis_data_tvalid;
 wire [FFT_OUTPUT_WIDTH-1:0] m_axis_data_tdata;
 wire       m_axis_data_tlast;
-wire [23:0] m_axis_data_tuser; 
+wire [23:0] m_axis_data_tuser;
 wire [2:0]  m_alm;
 wire        m_stat;
 reg [3:0] state;
 reg [FFT_OUTPUT_WIDTH-1:0] fft_result_buffer [0:FFT_POINTS-1];
-
 wire signed [7:0] signed_adc_data;
 assign signed_adc_data = fifo_rd_data - 8'sd128;
-
 my_FIFO fifo_inst (
-    .wr_clk(clk_5M), .wr_rst(!rst_5M_n), .wr_en(!fifo_wr_full), .wr_data(ad_data_in), .wr_full(fifo_wr_full), 
-    .rd_clk(clk_24M), .rd_rst(!rst_24M_n), .rd_en(fifo_rd_en), .rd_data(fifo_rd_data), .rd_empty(fifo_rd_empty), .almost_full(fifo_almost_full)
+.wr_clk(clk_5M), .wr_rst(!rst_5M_n), .wr_en(!fifo_wr_full), .wr_data(ad_data_in), .wr_full(fifo_wr_full),
+.rd_clk(clk_24M), .rd_rst(!rst_24M_n), .rd_en(fifo_rd_en), .rd_data(fifo_rd_data), .rd_empty(fifo_rd_empty), .almost_full(fifo_almost_full)
 );
-
 fft_test u_fft_ip (
-  .i_axi4s_data_tdata(s_axis_data_tdata), .i_axi4s_data_tvalid(s_axis_data_tvalid), .i_axi4s_data_tlast(s_axis_data_tlast),
-  .o_axi4s_data_tready(s_axis_data_tready), .i_axi4s_cfg_tdata(16'b0), .i_axi4s_cfg_tvalid(1'b0), .i_aclk(clk_24M), .i_aresetn(rst_24M_n),
-  .o_axi4s_data_tdata(m_axis_data_tdata), .o_axi4s_data_tvalid(m_axis_data_tvalid), .o_axi4s_data_tlast(m_axis_data_tlast),
-  .o_axi4s_data_tuser(m_axis_data_tuser), .o_alm(m_alm), .o_stat(m_stat)
+.i_axi4s_data_tdata(s_axis_data_tdata), .i_axi4s_data_tvalid(s_axis_data_tvalid), .i_axi4s_data_tlast(s_axis_data_tlast),
+.o_axi4s_data_tready(s_axis_data_tready), .i_axi4s_cfg_tdata(16'b0), .i_axi4s_cfg_tvalid(1'b0), .i_aclk(clk_24M), .i_aresetn(rst_24M_n),
+.o_axi4s_data_tdata(m_axis_data_tdata), .o_axi4s_data_tvalid(m_axis_data_tvalid), .o_axi4s_data_tlast(m_axis_data_tlast),
+.o_axi4s_data_tuser(m_axis_data_tuser), .o_alm(m_alm), .o_stat(m_stat)
 );
-
 wire [$clog2(FFT_POINTS)-1:0] calc_addr;
-(* DONT_TOUCH = "TRUE" *) wire signed [23:0] fft_real_part = fft_result_buffer[calc_addr][23:0];
-(* DONT_TOUCH = "TRUE" *) wire signed [23:0] fft_imag_part = fft_result_buffer[calc_addr][47:24];
-
+(* DONT_TOUCH = "TRUE" ) wire signed [23:0] fft_real_part = fft_result_buffer[calc_addr][23:0];
+( DONT_TOUCH = "TRUE" *) wire signed [23:0] fft_imag_part = fft_result_buffer[calc_addr][47:24];
 wire [48:0] power_val;
 fft_power_calc u_fft_power_calc (
-    .clk(clk_24M), .rst_n(rst_24M_n), .real_in(fft_real_part), .imag_in(fft_imag_part), .power_out(power_val)
+.clk(clk_24M), .rst_n(rst_24M_n), .real_in(fft_real_part), .imag_in(fft_imag_part), .power_out(power_val)
 );
-
-// Ê¹ÓÃĞÂµÄdBËõ·ÅÄ£¿é
 wire [7:0] db_scaled_height;
 power_to_db_approx db_height_scaler_inst (
-    .power_in(power_val),          
-    .height_out(db_scaled_height)
+.power_in(power_val),
+.height_out(db_scaled_height)
 );
-
 wire [9:0] ram_wr_addr, ram_rd_addr;
 wire       ram_wr_en;
 wire [7:0] ram_rd_data;
 dual_port_ram_1024x8 display_ram (
-    .a_addr(ram_wr_addr), 
-    .a_wr_data(db_scaled_height), // ½«RAMµÄĞ´Êı¾İÔ´¸ÄÎªdBËõ·ÅºóµÄÖµ
-    .a_wr_en(ram_wr_en), 
-    .a_clk(clk_24M), 
-    .a_rst(!rst_24M_n), 
-    .a_rd_data(), 
-    .b_addr(ram_rd_addr), .b_rd_data(ram_rd_data), .b_clk(pix_clk), .b_rst(!global_reset_n), .b_wr_data(8'b0), .b_wr_en(1'b0)
+.a_addr(ram_wr_addr),
+.a_wr_data(db_scaled_height),
+.a_wr_en(ram_wr_en),
+.a_clk(clk_24M),
+.a_rst(!rst_24M_n),
+.a_rd_data(),
+.b_addr(ram_rd_addr), .b_rd_data(ram_rd_data), .b_clk(pix_clk), .b_rst(!global_reset_n), .b_wr_data(8'b0), .b_wr_en(1'b0)
 );
-
 //================================================================
-// E. Ö÷¿ØÖÆ×´Ì¬»ú (FSM) @ 24MHz
+// E. ä¸»æ§åˆ¶çŠ¶æ€æœº (FSM) @ 24MHz
 //================================================================
 reg [$clog2(FFT_POINTS)-1:0] calc_addr_cnt;
 reg [15:0] wait_cnt;
-
 assign fifo_rd_en = (state == S_FEED_FFT) && !fifo_rd_empty;
 assign calc_addr   = calc_addr_cnt;
 assign ram_wr_addr = calc_addr_cnt;
 assign ram_wr_en   = (state == S_CALC_POWER);
-
 always @(posedge clk_24M) begin
-    if (!rst_24M_n) begin
-        state <= S_IDLE; 
-        s_axis_data_tvalid <= 1'b0; 
-        s_axis_data_tlast <= 1'b0;
-        s_axis_data_tdata <= 16'd0; 
-        fft_input_cnt <= 0; 
-        calc_addr_cnt <= 0; 
-        wait_cnt <= 0;
-    end else begin
-        case (state)
-            S_IDLE:             
-                if (pwok) begin
-                    state <= S_WAIT_FIFO;
-                end
-            S_WAIT_FIFO:        
-                if (fifo_almost_full) begin
-                    state <= S_FEED_FFT;
-                end
-            S_FEED_FFT: begin
-                s_axis_data_tvalid <= !fifo_rd_empty;
-                s_axis_data_tdata  <= {8'b0, signed_adc_data}; 
-                s_axis_data_tlast  <= (fft_input_cnt == FFT_POINTS - 1);
-                if (s_axis_data_tvalid) begin
-                    if (fft_input_cnt == FFT_POINTS - 1) begin
-                        fft_input_cnt <= 0; 
-                        state <= S_STORE_FFT_RESULT;
-                    end
-                    else begin
-                        fft_input_cnt <= fft_input_cnt + 1;
-                    end
-                end
-            end
-            S_STORE_FFT_RESULT: begin
-                s_axis_data_tvalid <= 1'b0; 
-                s_axis_data_tlast <= 1'b0;
-                if (m_axis_data_tvalid) begin
-                    fft_result_buffer[m_axis_data_tuser[9:0]] <= m_axis_data_tdata; 
-                    if (m_axis_data_tlast) begin
-                        state <= S_CALC_POWER;
-                    end
-                end
-            end
-            S_CALC_POWER: begin
-                if (calc_addr_cnt == FFT_POINTS - 1) begin
-                    calc_addr_cnt <= 0; 
-                    state <= S_WAIT_FRAME;
-                end
-                else begin
-                    calc_addr_cnt <= calc_addr_cnt + 1;
-                end
-            end
-            S_WAIT_FRAME: begin
-                if (wait_cnt == 24000 - 1) begin
-                    wait_cnt <= 0; 
-                    state <= S_WAIT_FIFO;
-                end
-                else begin
-                    wait_cnt <= wait_cnt + 1;
-                end
-            end
-            default: 
-                state <= S_IDLE;
-        endcase
-    end
+if (!rst_24M_n) begin
+state <= S_IDLE;
+s_axis_data_tvalid <= 1'b0;
+s_axis_data_tlast <= 1'b0;
+s_axis_data_tdata <= 16'd0;
+fft_input_cnt <= 0;
+calc_addr_cnt <= 0;
+wait_cnt <= 0;
+end else begin
+case (state)
+S_IDLE:             if (pwok) state <= S_WAIT_FIFO;
+S_WAIT_FIFO:        if (fifo_almost_full) state <= S_FEED_FFT;
+S_FEED_FFT: begin
+s_axis_data_tvalid <= !fifo_rd_empty;
+s_axis_data_tdata  <= {8'b0, signed_adc_data};
+s_axis_data_tlast  <= (fft_input_cnt == FFT_POINTS - 1);
+if (s_axis_data_tvalid) begin
+if (fft_input_cnt == FFT_POINTS - 1) begin
+fft_input_cnt <= 0;
+state <= S_STORE_FFT_RESULT;
+end else begin
+fft_input_cnt <= fft_input_cnt + 1;
 end
-
+end
+end
+S_STORE_FFT_RESULT: begin
+s_axis_data_tvalid <= 1'b0;
+s_axis_data_tlast <= 1'b0;
+if (m_axis_data_tvalid) begin
+fft_result_buffer[m_axis_data_tuser[9:0]] <= m_axis_data_tdata;
+if (m_axis_data_tlast) begin
+state <= S_CALC_POWER;
+end
+end
+end
+S_CALC_POWER: begin
+if (calc_addr_cnt == FFT_POINTS - 1) begin
+calc_addr_cnt <= 0;
+state <= S_WAIT_FRAME;
+end else begin
+calc_addr_cnt <= calc_addr_cnt + 1;
+end
+end
+S_WAIT_FRAME: begin
+if (wait_cnt == 24000 - 1) begin
+wait_cnt <= 0;
+state <= S_WAIT_FIFO;
+end else begin
+wait_cnt <= wait_cnt + 1;
+end
+end
+default: state <= S_IDLE;
+endcase
+end
+end
 //================================================================
-// F. HDMI ÏÔÊ¾Á÷Ë®Ïß (ÒÑ¸ù¾İĞÂµÄhdmi_driverÖØ¹¹)
+// F. HDMI æ˜¾ç¤ºæµæ°´çº¿ (å·²ç§»é™¤èƒŒæ™¯ç½‘æ ¼)
 //================================================================
 wire hdmi_vs, hdmi_hs, hdmi_de;
-
+hdmi_driver u_hdmi_driver (
+.pix_clk(pix_clk), .cfg_clk(hdmi_cfg_clk), .rstn(global_reset_n), .iic_tx_scl(iic_tx_scl), .iic_tx_sda(iic_tx_sda),
+.led_int(led_int), .vs_out(hdmi_vs), .hs_out(hdmi_hs), .de_out(hdmi_de),
+.act_x(), .act_y()
+);
+// <<< MODIFICATION 1: ç¦ç”¨ grid_display æ¨¡å— >>>
+// æˆ‘ä»¬ä¸å†éœ€è¦ grid_display æ¨¡å—ï¼Œå¯ä»¥ç›´æ¥å°†å…¶æ³¨é‡Šæ‰æˆ–åˆ é™¤ã€‚
+/*
 wire [23:0] grid_data_out;
 wire grid_vs, grid_hs, grid_de;
-
-hdmi_driver u_hdmi_driver (
-    .pix_clk(pix_clk), .cfg_clk(hdmi_cfg_clk), .rstn(global_reset_n), .iic_tx_scl(iic_tx_scl), .iic_tx_sda(iic_tx_sda), 
-    .led_int(led_int), .vs_out(hdmi_vs), .hs_out(hdmi_hs), .de_out(hdmi_de),
-    .act_x(), .act_y()
-);
-
 grid_display u_grid_display (
-    .rst_n(global_reset_n), .pclk(pix_clk), .i_hs(hdmi_hs), .i_vs(hdmi_vs), .i_de(hdmi_de), 
-    .i_data(24'b0), 
-    .o_hs(grid_hs), .o_vs(grid_vs), .o_de(grid_de), .o_data(grid_data_out)
+.rst_n(global_reset_n), .pclk(pix_clk), .i_hs(hdmi_hs), .i_vs(hdmi_vs), .i_de(hdmi_de),
+.i_data(24'b0),
+.o_hs(grid_hs), .o_vs(grid_vs), .o_de(grid_de), .o_data(grid_data_out)
 );
-
+*/
+// <<< MODIFICATION 2: ä¿®æ”¹ spectrum_display çš„è¾“å…¥è¿æ¥ >>>
+// å°† u_spectrum_display çš„è¾“å…¥ç›´æ¥è¿æ¥åˆ° u_hdmi_driver çš„è¾“å‡º
 spectrum_display u_spectrum_display (
-    .rst_n(global_reset_n), .pclk(pix_clk), .spectrum_color(24'h00FF00), .i_hs(grid_hs), .i_vs(grid_vs), 
-    .i_de(grid_de), .i_data(grid_data_out), .ram_rd_addr(ram_rd_addr), .ram_rd_data(ram_rd_data), 
-    .o_hs(vout_hs), .o_vs(vout_vs), .o_de(vout_de), .o_data(vout_data)
+.rst_n(global_reset_n),
+.pclk(pix_clk),
+.spectrum_color(24'h00FF00),
+// å°†æ—¶åºä¿¡å·ç›´æ¥ä» hdmi_driver æ¥å…¥
+.i_hs(hdmi_hs),
+.i_vs(hdmi_vs),
+.i_de(hdmi_de),
+// å°†èƒŒæ™¯æ•°æ®è¾“å…¥å›ºå®šä¸ºé»‘è‰² (24'h000000)
+.i_data(24'h000000),
+.ram_rd_addr(ram_rd_addr),
+.ram_rd_data(ram_rd_data),
+// å°†è¾“å‡ºç›´æ¥è¿æ¥åˆ°é¡¶å±‚ç«¯å£
+.o_hs(vout_hs),
+.o_vs(vout_vs),
+.o_de(vout_de),
+.o_data(vout_data)
 );
-
 endmodule
